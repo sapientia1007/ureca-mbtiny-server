@@ -25,6 +25,7 @@ import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import reactor.core.publisher.Mono;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -120,9 +121,8 @@ public class ContentsService {
                 "T: {}%\n" +
                 "J: {}%\n 형식으로 알려주는데, 각 값 0이랑 100은 절대 주지마" );
 
-        GptDto.Response gptResponse = gptWebClient.assistantRes(gptRequest);
-
-        String content = gptResponse.getChoices().get(0).getMessage().getContent();
+        Mono<GptDto.Response> gptResponse = gptWebClient.assistantRes(gptRequest);
+        String content = Objects.requireNonNull(gptResponse.block()).getChoices().get(0).getMessage().getContent();
         addChatMessages(gptRequest, ASSISTANT, content);
         memberChatMap.put(userId, gptRequest);
 
@@ -278,8 +278,8 @@ public class ContentsService {
                 "요약: [두 문장 요약]\n");
         addChatMessages(gptRequest, USER, contents.getDescription());
 
-        GptDto.Response gptResponse = gptWebClient.assistantRes(gptRequest);
-        String content = gptResponse.getChoices().get(0).getMessage().getContent();
+        Mono<GptDto.Response> gptResponse = gptWebClient.assistantRes(gptRequest);
+        String content = Objects.requireNonNull(gptResponse.block()).getChoices().get(0).getMessage().getContent();
 
         // 키워드와 요약본을 분리하기 위해 먼저 줄 바꿈(\n)으로 나눕니다.
         String[] lines = content.split("\n");

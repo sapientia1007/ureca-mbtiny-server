@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 @Slf4j
 public class GptWebClient {
@@ -25,10 +26,10 @@ public class GptWebClient {
     public GptDto.Request of(int length) {
         return new GptDto.Request(recommendModel, length);
     }
-    public GptDto.Response assistantRes(GptDto.Request request){
+    public Mono<GptDto.Response> assistantRes(GptDto.Request request){
         return webClient.post()
                 .bodyValue(request)
                 .retrieve()
-                .bodyToMono(GptDto.Response.class).block();
+                .bodyToMono(GptDto.Response.class);
     }
 }

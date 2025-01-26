@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -36,5 +37,8 @@ public interface ContentsRepository extends JpaRepository<Contents, Long> {
     // 전체 콘텐츠에서 랜덤으로 15개 가져오기 - ACTIVE인 상태
     @Query(value = "SELECT * FROM contents WHERE status = 'ACTIVE' ORDER BY RANDOM() LIMIT 15", nativeQuery = true)
     List<Contents> findRandomContents();
+
+    @Query("DELETE FROM Contents c WHERE c.status = :status AND c.updateAt <= :date")
+    void deleteByStatusAndUpdatedAtBefore(@Param("status") ContentsStatus status, @Param("date") LocalDateTime date);
 
 }
