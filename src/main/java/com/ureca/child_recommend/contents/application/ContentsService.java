@@ -124,11 +124,9 @@ public class ContentsService {
 
         gptWebClient.assistantRes(gptRequest)
                 .map(response -> response.getChoices().get(0).getMessage().getContent())
-                .flatMap(content -> {
+                .doOnNext(content -> {
                     memberChatMap.put(userId, gptRequest);
-                    return Mono.fromRunnable(() -> addChatMessages(gptRequest, ASSISTANT, content))
-                            .subscribeOn(Schedulers.boundedElastic())
-                            .thenReturn(content);
+                    addChatMessages(gptRequest, ASSISTANT, content);
                 })
                 .subscribe();
 
