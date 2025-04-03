@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -121,10 +122,15 @@ public class ContentsService {
                 "T: {}%\n" +
                 "J: {}%\n 형식으로 알려주는데, 각 값 0이랑 100은 절대 주지마" );
 
-        Mono<GptDto.Response> gptResponse = gptWebClient.assistantRes(gptRequest);
-        String content = Objects.requireNonNull(gptResponse.block()).getChoices().get(0).getMessage().getContent();
-        addChatMessages(gptRequest, ASSISTANT, content);
-        memberChatMap.put(userId, gptRequest);
+        gptWebClient.assistantRes(gptRequest)
+                .map(response -> response.getChoices().get(0).getMessage().getContent())
+                .flatMap(content -> {
+                    memberChatMap.put(userId, gptRequest);
+                    return Mono.fromRunnable(() -> addChatMessages(gptRequest, ASSISTANT, content))
+                            .subscribeOn(Schedulers.boundedElastic())
+                            .thenReturn(content);
+                })
+                .subscribe();
 
         String mbtiInfo = gptRequest.getMessages().get(2).content; // 질문에 대한 gpt 대답 데이터
 
