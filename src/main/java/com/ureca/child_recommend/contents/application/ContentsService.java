@@ -123,7 +123,7 @@ public class ContentsService {
                 "J: {}%\n 형식으로 알려주는데, 각 값 0이랑 100은 절대 주지마" );
 
         gptWebClient.assistantRes(gptRequest)
-                .map(response -> response.getChoices().get(0).getMessage().getContent())
+                .flatMap(response -> Mono.just(response.getChoices().get(0).getMessage().getContent())) // 비동기 변환
                 .doOnNext(content -> {
                     memberChatMap.put(userId, gptRequest);
                     addChatMessages(gptRequest, ASSISTANT, content);
